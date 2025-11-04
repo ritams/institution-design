@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evolutionary Game with Cultural Sway</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f7f5fc;
+        --surface: #ffffff;
+        --surface-strong: #ede7ff;
+        --text: #23163b;
+        --muted: #5c5077;
+        --accent: #6d5b9a;
+        --accent-muted: rgba(109, 91, 154, 0.12);
+        --border: rgba(61, 43, 95, 0.12);
+        --shadow: 0 18px 32px rgba(44, 32, 75, 0.12);
+        font-size: 16px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        background: radial-gradient(circle at top, rgba(109, 91, 154, 0.08), transparent 50%), var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+        letter-spacing: 0.01em;
+      }
+
+      header {
+        padding: 4rem 1.5rem 3rem;
+        text-align: center;
+        background: linear-gradient(160deg, rgba(255, 255, 255, 0.92), rgba(109, 91, 154, 0.18));
+        position: relative;
+        overflow: hidden;
+      }
+
+      header::after {
+        content: "";
+        position: absolute;
+        inset: -80px;
+        background: radial-gradient(circle at top right, rgba(109, 91, 154, 0.25), transparent 65%);
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      header h1 {
+        margin: 0 auto 1rem;
+        max-width: 900px;
+        font-size: clamp(2.5rem, 5vw, 3.2rem);
+        font-weight: 700;
+        letter-spacing: 0.04em;
+      }
+
+      header p {
+        max-width: 680px;
+        margin: 0 auto;
+        color: rgba(35, 22, 59, 0.76);
+        font-size: 1.05rem;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3rem 1.5rem 4rem;
+      }
+
+      section {
+        margin-bottom: 2.5rem;
+        background: linear-gradient(135deg, var(--surface), var(--surface-strong));
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 2.25rem;
+        box-shadow: var(--shadow);
+        transition: transform 300ms ease, border-color 300ms ease, box-shadow 300ms ease;
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      section.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      section:hover {
+        transform: translateY(-6px);
+        border-color: rgba(109, 91, 154, 0.4);
+        box-shadow: 0 20px 40px rgba(109, 91, 154, 0.16);
+      }
+
+      h2 {
+        margin-top: 0;
+        font-size: 1.9rem;
+        letter-spacing: 0.03em;
+      }
+
+      h3 {
+        margin-top: 2rem;
+        font-size: 1.1rem;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .numbered-title {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .numbered-title span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.6rem;
+        height: 2.6rem;
+        border-radius: 50%;
+        background: var(--accent-muted);
+        color: var(--accent);
+        font-weight: 600;
+        font-size: 1.2rem;
+      }
+
+      ul,
+      ol {
+        padding-left: 1.2rem;
+      }
+
+      li + li {
+        margin-top: 0.5rem;
+      }
+
+      code,
+      .pill {
+        padding: 0.2rem 0.55rem;
+        border-radius: 999px;
+        background: rgba(109, 91, 154, 0.12);
+        border: 1px solid rgba(109, 91, 154, 0.26);
+        color: var(--text);
+        font-size: 0.95rem;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+        margin: 1.5rem 0;
+        border-radius: 16px;
+        border: 1px solid rgba(109, 91, 154, 0.18);
+        background: rgba(255, 255, 255, 0.82);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 480px;
+      }
+
+      th,
+      td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid rgba(109, 91, 154, 0.2);
+        text-align: left;
+      }
+
+      th {
+        color: var(--accent);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.92rem;
+        letter-spacing: 0.08em;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      .equation {
+        margin: 1.5rem 0;
+        padding: 1rem 1.25rem;
+        border-left: 4px solid var(--accent);
+        background: rgba(109, 91, 154, 0.08);
+        border-radius: 12px;
+        font-size: 1.05rem;
+        color: var(--muted);
+      }
+
+      .math {
+        font-size: 1.05rem;
+        color: var(--muted);
+        font-style: italic;
+      }
+
+      .subdued {
+        color: var(--muted);
+      }
+
+      footer {
+        margin: 4rem auto 3rem;
+        max-width: 1100px;
+        padding: 1.5rem 1.5rem 0;
+        border-top: 1px solid rgba(109, 91, 154, 0.32);
+        color: rgba(35, 22, 59, 0.65);
+        text-align: right;
+      }
+
+      @media (max-width: 720px) {
+        header {
+          padding: 3rem 1.2rem 2.5rem;
+        }
+
+        section {
+          padding: 1.75rem;
+        }
+
+        table {
+          min-width: 320px;
+        }
+      }
+    </style>
+    <script>
+      window.MathJax = {
+        tex: {
+          inlineMath: [['\\(', '\\)'], ['$', '$']],
+          displayMath: [['\\[', '\\]'], ['$$', '$$']],
+          processEscapes: true
+        },
+        options: {
+          renderActions: {
+            addMenu: []
+          }
+        }
+      };
+    </script>
+    <script
+      id="MathJax-script"
+      async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <h1>Evolutionary Game with Cultural Sway</h1>
+      <p>
+        A simulation framework exploring how populations evolve when innovation and tradition respond to changing environments and cultural inertia governed by a tunable parameter \( \theta \).
+      </p>
+    </header>
+
+    <main class="container">
+      <section id="overview">
+        <div class="numbered-title">
+          <span>1</span>
+          <h2>Overview</h2>
+        </div>
+        <p>
+          This document specifies a simulation framework for an evolutionary game with <strong>Innovation (I)</strong> and <strong>Tradition (T)</strong> strategies, governed by a tunable environmental parameter \( \theta \) ("theta"). The game explores how populations evolve under shifting environmental incentives and <em>cultural inertia</em>, modeled by a cultural sway parameter.
+        </p>
+        <p>
+          The framework supports multiple games indexed by \( \theta \) values (sequentially or arbitrarily chosen). Each game produces equilibrium strategy distributions that feed into subsequent games, modulated by the cultural sway mechanism.
+        </p>
+      </section>
+
+      <section id="game-definition">
+        <div class="numbered-title">
+          <span>2</span>
+          <h2>Game Definition</h2>
+        </div>
+
+        <h3>2.1 Strategy Space</h3>
+        <p>Each agent chooses one of two strategies:</p>
+        <ul>
+          <li><strong>T:</strong> Tradition</li>
+          <li><strong>I:</strong> Innovation</li>
+        </ul>
+
+        <h3>2.2 Payoff Matrix (Parameterization by \( \theta \))</h3>
+        <p>For any pairwise interaction:</p>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th></th>
+                <th>Tradition (T)</th>
+                <th>Innovate (I)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Tradition (T)</strong></td>
+                <td>\((16 - \theta, 16 - \theta)\)</td>
+                <td>\((4, 4)\)</td>
+              </tr>
+              <tr>
+                <td><strong>Innovate (I)</strong></td>
+                <td>\((4, 4)\)</td>
+                <td>\((\theta, \theta)\)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul>
+          <li>\( \theta \in [0, 16] \)</li>
+          <li>Low \( \theta \) favors <strong>Tradition</strong> (higher payoff for T&ndash;T interactions).</li>
+          <li>High \( \theta \) favors <strong>Innovation</strong> (higher payoff for I&ndash;I interactions).</li>
+        </ul>
+
+        <h3>2.3 Equilibrium Regions</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>\( \theta \) Range</th>
+                <th>Dominant Equilibrium</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>\(0 \leq \theta < 6\)</td>
+                <td>Tradition Immune</td>
+                <td>Pure Tradition is stable</td>
+              </tr>
+              <tr>
+                <td>\(6 \leq \theta \leq 10\)</td>
+                <td>Susceptible</td>
+                <td>Mixed equilibria may arise</td>
+              </tr>
+              <tr>
+                <td>\(10 < \theta \leq 16\)</td>
+                <td>Innovation Immune</td>
+                <td>Pure Innovation is stable</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="agents-population">
+        <div class="numbered-title">
+          <span>3</span>
+          <h2>Agents and Population</h2>
+        </div>
+
+        <h3>3.1 Agent Properties</h3>
+        <p>Each of the \( N \) agents has the following attributes:</p>
+        <ul>
+          <li><strong>strategy:</strong> current strategy \( \in \{T, I\} \)</li>
+          <li><strong>payoff:</strong> cumulative payoff over current game</li>
+          <li><strong>cultural_sway:</strong> boolean (True/False)</li>
+          <li><strong>history:</strong> record of strategies across all previous \( \theta \) games (infinite memory)</li>
+          <li><strong>game_index:</strong> current \( \theta \) value associated with the game instance</li>
+        </ul>
+
+        <h3>3.2 Initialization</h3>
+        <p>At the beginning of the first game (initial \( \theta \)):</p>
+        <ul>
+          <li>Strategies are assigned randomly with equal probability (50% T, 50% I).</li>
+          <li>A fraction \( f_{\text{cultural}} \) (e.g., \(3/4\)) of agents are assigned <code>cultural_sway = True</code>.</li>
+          <li>The remaining \( 1 - f_{\text{cultural}} \) have <code>cultural_sway = False</code>.</li>
+        </ul>
+      </section>
+
+      <section id="game-dynamics">
+        <div class="numbered-title">
+          <span>4</span>
+          <h2>Game Dynamics (Within a Single \( \theta \))</h2>
+        </div>
+
+        <h3>4.1 Population Interaction</h3>
+        <ul>
+          <li>Population is <strong>well-mixed</strong> (no spatial structure).</li>
+          <li>Each agent interacts with <strong>one random partner</strong> per iteration (pairwise interaction).</li>
+          <li>Both agents receive payoffs from the payoff matrix according to their chosen strategies.</li>
+        </ul>
+
+        <h3>4.2 Evolutionary Update Rule</h3>
+        <ol>
+          <li>Each agent \( i \) randomly samples another agent \( j \) from the population.</li>
+          <li>Let \( \pi_i \) and \( \pi_j \) be their payoffs.</li>
+          <li>
+            The probability that \( i \) adopts \( j \)'s strategy follows the <strong>Fermi update rule</strong>:
+            <div class="equation">
+              \[
+                P(i \rightarrow j) = \frac{1}{1 + \exp\big[-\beta (\pi_j - \pi_i)\big]}
+              \]
+            </div>
+          </li>
+          <li>Each agent independently updates its strategy based on this probability.</li>
+        </ol>
+        <p class="subdued">The implementation should be modular, allowing other update rules to be easily substituted.</p>
+
+        <h3>4.3 Stopping Condition</h3>
+        <p>Each simulation runs for a fixed number of steps (<code>max_steps</code>), or until no strategy changes occur between iterations.</p>
+      </section>
+
+      <section id="sequential-games">
+        <div class="numbered-title">
+          <span>5</span>
+          <h2>Sequential Games and Cultural Sway</h2>
+        </div>
+
+        <h3>5.1 Multi-Game Simulation</h3>
+        <p>A simulation consists of multiple <strong>game instances</strong>, each parameterized by a distinct \( \theta \) value:</p>
+        <div class="equation">
+          \[
+            \Theta = [\theta_1, \theta_2, \ldots, \theta_M]
+          \]
+        </div>
+        <p>The \( \theta \) values may:</p>
+        <ul>
+          <li>increase gradually,</li>
+          <li>decrease,</li>
+          <li>or vary arbitrarily.</li>
+        </ul>
+
+        <h3>5.2 Determining Initial Conditions for New Games</h3>
+        <ol>
+          <li>When a new \( \theta_k \) is introduced, identify the <strong>closest previous game</strong> \( \theta_m \) among \( \{\theta_1, \ldots, \theta_{k-1}\} \) (minimize \( |\theta_k - \theta_m| \)).</li>
+          <li>Retrieve the equilibrium strategy distribution from that previous game (e.g., if 90% of the population played Tradition and 10% Innovation).</li>
+          <li>
+            Initialize the new population as follows:
+            <ul>
+              <li>For agents with <code>cultural_sway = True</code>: each agent independently draws a strategy according to the previous equilibrium distribution (e.g., \( P(T) = 0.9 \), \( P(I) = 0.1 \)).</li>
+              <li>For agents with <code>cultural_sway = False</code>: each agent is initialized with \( P(T) = 0.5 \), \( P(I) = 0.5 \) (random uniform).</li>
+            </ul>
+          </li>
+        </ol>
+
+        <h3>5.3 Memory and Historical Influence</h3>
+        <ul>
+          <li>All agents retain full memory of all previous games (infinite history).</li>
+          <li>Historical data (strategies and payoffs for all \( \theta \)) can be used for later analysis.</li>
+        </ul>
+      </section>
+
+      <section id="parameters">
+        <div class="numbered-title">
+          <span>6</span>
+          <h2>Parameters Summary</h2>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Typical Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>\( N \)</td>
+                <td>Number of agents</td>
+                <td>100</td>
+              </tr>
+              <tr>
+                <td>\( \theta \)</td>
+                <td>Environment parameter</td>
+                <td>\([0, 16]\)</td>
+              </tr>
+              <tr>
+                <td>\( f_{\text{cultural}} \)</td>
+                <td>Fraction of agents with cultural sway</td>
+                <td>\(0.75\)</td>
+              </tr>
+              <tr>
+                <td>\( \beta \)</td>
+                <td>Selection intensity (Fermi rule)</td>
+                <td>\(1.0\)</td>
+              </tr>
+              <tr>
+                <td><code>max_steps</code></td>
+                <td>Max iterations per game</td>
+                <td>5000</td>
+              </tr>
+              <tr>
+                <td><code>payoff_matrix</code></td>
+                <td>As defined in Section 2.2</td>
+                <td>&mdash;</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="simulation-flow">
+        <div class="numbered-title">
+          <span>7</span>
+          <h2>Simulation Flow</h2>
+        </div>
+        <ol>
+          <li>
+            <strong>Initialize</strong> population for \( \theta_1 \):
+            <ul>
+              <li>Assign strategies randomly.</li>
+              <li>Assign <code>cultural_sway</code> attributes.</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Run Evolution</strong> under \( \theta_1 \):
+            <ul>
+              <li>Pairwise interactions and payoff accumulation.</li>
+              <li>Strategy updates via Fermi rule.</li>
+              <li>Continue until equilibrium or <code>max_steps</code>.</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Record Equilibrium Composition</strong>:
+            <ul>
+              <li>Compute fraction of T and I in final state.</li>
+            </ul>
+          </li>
+          <li>
+            <strong>For each subsequent</strong> \( \theta_k \):
+            <ul>
+              <li>Determine closest previous \( \theta_m \).</li>
+              <li>Initialize strategies according to Section 5.2.</li>
+              <li>Run evolution again.</li>
+            </ul>
+          </li>
+          <li>
+            <strong>Repeat</strong> until all \( \theta \) values in \( \Theta \) are simulated.
+          </li>
+        </ol>
+      </section>
+
+      <section id="notes">
+        <div class="numbered-title">
+          <span>8</span>
+          <h2>Notes and Extensibility</h2>
+        </div>
+        <ul>
+          <li>The model can later include:</li>
+        </ul>
+        <ul>
+          <li>Network structure (e.g., spatial lattice or graph-based interactions)</li>
+          <li>Payoff noise or perception bias</li>
+          <li>Cultural sway decay or heterogeneity</li>
+          <li>Time-varying \( \theta \) (dynamic environment)</li>
+        </ul>
+        <p class="subdued">Output analysis (mean strategy fractions, stability measures, entropy, etc.) will be added in later design stages.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p><em>Document version 1.0 &ndash; Framework design for the Evolutionary Game with Cultural Sway.</em></p>
+    </footer>
+
+    <script>
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('visible');
+              observer.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+
+      document.querySelectorAll('section').forEach((section) => {
+        observer.observe(section);
+      });
+    </script>
+  </body>
+</html>
