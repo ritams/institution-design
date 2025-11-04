@@ -8,4 +8,6 @@ dependencies = [
     "jupyter>=1.1.1",
     "matplotlib>=3.10.7",
     "numpy>=2.3.4",
+    "pyyaml>=6.0",
+    "numba>=0.60.0",
 ]

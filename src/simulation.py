@@ -1,6 +1,10 @@
 import random
 import os
 import logging
+import pickle
+import yaml
+from datetime import datetime
+import numpy as np
 from .agent import Agent
 from .game import Game
 
@@ -43,32 +47,49 @@ class Simulation:
 
     def run_simulation(self):
         os.makedirs('results', exist_ok=True)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        run_dir = f'results/run_{timestamp}'
+        os.makedirs(run_dir, exist_ok=True)
+        self.data = {}
         logging.info("Starting full simulation run")
         for theta in self.theta_list:
             logging.info(f"Processing theta {theta}")
             self.initialize_for_theta(theta)
             initial_strategies = [a.strategy for a in self.population]
             ensemble_fractions = []
+            self.data[theta] = {}
             for i in range(self.ensemble_size):
                 # Reset strategies to initial
                 for a, s in zip(self.population, initial_strategies):
                     a.strategy = s
                 game = Game(theta, self.beta, self.max_steps, self.population)
+                game.strategies = np.array([0 if a.strategy == 'T' else 1 for a in self.population])
                 fractions = game.run()
                 ensemble_fractions.append(fractions)
-                # Save strategies
-                with open(f'results/strategy_theta_{theta}_ensemble_{i}.txt', 'w') as f:
-                    for agent in self.population:
-                        strategies = [str(s) for s in agent.history]
-                        f.write(' '.join(strategies) + '\n')
-                # Save payoffs
-                with open(f'results/payoff_theta_{theta}_ensemble_{i}.txt', 'w') as f:
-                    for agent in self.population:
-                        payoffs = [str(p) for p in agent.payoff_history]
-                        f.write(' '.join(payoffs) + '\n')
+                # Collect strategies and payoffs
+                strategies = [agent.history for agent in self.population]
+                payoffs = [agent.payoff_history for agent in self.population]
+                self.data[theta][i] = {'strategies': strategies, 'payoffs': payoffs}
             # Average fractions
             averaged_fractions = self.average_fractions(ensemble_fractions)
             self.equilibria[theta] = averaged_fractions
             logging.info(f"Completed theta {theta}, averaged final fractions: {averaged_fractions}")
         logging.info(f"Simulation completed. Equilibria: {self.equilibria}")
+        # Save data to pickle
+        with open(f'{run_dir}/simulation_data.pkl', 'wb') as f:
+            pickle.dump(self.data, f)
+        # Save metadata to YAML
+        metadata = {
+            'N': self.N,
+            'f_cultural': self.f_cultural,
+            'theta_list': self.theta_list,
+            'beta': self.beta,
+            'max_steps': self.max_steps,
+            'ensemble_size': self.ensemble_size,
+            'equilibria': [{'theta': theta, **self.equilibria[theta]} for theta in self.theta_list],
+            'timestamp': timestamp,
+            'run_dir': run_dir
+        }
+        with open(f'{run_dir}/simulation_metadata.yaml', 'w') as f:
+            yaml.dump(metadata, f)
         return self.equilibria
