@@ -23,15 +23,19 @@ class Game:
             agent.payoff_history = []
         logging.info(f"Initialized game for theta {theta}, beta {beta}, max_steps {max_steps}, population size {len(population)}")
 
-    def interact(self):
-        random.shuffle(self.population)
-        for i in range(0, len(self.population), 2):
-            agent1 = self.population[i]
-            agent2 = self.population[i + 1] if i + 1 < len(self.population) else None
-            if agent2:
-                p1, p2 = payoff_matrix(self.theta, agent1.strategy, agent2.strategy)
-                agent1.payoff = p1
-                agent2.payoff = p2
+    def update_payoff(self):
+        # Compute population fractions
+        t_count = sum(1 for agent in self.population if agent.strategy == 'T')
+        i_count = len(self.population) - t_count
+        frac_t = t_count / len(self.population) if self.population else 0
+        frac_i = i_count / len(self.population) if self.population else 0
+        
+        # Calculate average payoff for each agent
+        for agent in self.population:
+            avg_payoff = (frac_t * payoff_matrix(self.theta, agent.strategy, 'T')[0] +
+                          frac_i * payoff_matrix(self.theta, agent.strategy, 'I')[0])
+            agent.payoff = avg_payoff
+        
         # Record payoff history
         for agent in self.population:
             agent.payoff_history.append((agent.payoff, self.theta))
@@ -49,7 +53,7 @@ class Game:
     def run(self):
         logging.info(f"Starting evolution for {self.max_steps} steps")
         for step in range(self.max_steps):
-            self.interact()
+            self.update_payoff()
             self.update_strategies()
             # Record history after each evolution step
             for agent in self.population:
