@@ -373,8 +373,9 @@
         <h3>4.1 Population Interaction</h3>
         <ul>
           <li>Population is <strong>well-mixed</strong> (no spatial structure).</li>
-          <li>Each agent interacts with <strong>one random partner</strong> per iteration (pairwise interaction).</li>
-          <li>Both agents receive payoffs from the payoff matrix according to their chosen strategies.</li>
+          <li>Payoffs are calculated as the <strong>expected payoff</strong> against a random opponent, based on the current population strategy fractions.</li>
+          <li>For each agent with strategy S, payoff = frac<sub>T</sub> × payoff(S, 'T') + frac<sub>I</sub> × payoff(S, 'I'), where frac<sub>T</sub> and frac<sub>I</sub> are the current proportions of Tradition and Innovation in the population.</li>
+          <li>This approximates the average payoff without explicit pairwise interactions for computational efficiency.</li>
         </ul>
 
         <h3>4.2 Evolutionary Update Rule</h3>
@@ -503,7 +504,7 @@
           <li>
             <strong>Run Evolution</strong> under \( \theta_1 \):
             <ul>
-              <li>Pairwise interactions and payoff accumulation.</li>
+              <li>Payoff calculation based on population strategy fractions.</li>
               <li>Strategy updates via Fermi rule.</li>
               <li>Continue until equilibrium or <code>max_steps</code>.</li>
             </ul>
@@ -538,6 +539,7 @@
         </ul>
         <ul>
           <li>Network structure (e.g., spatial lattice or graph-based interactions)</li>
+          <li>Explicit pairwise interactions (replacing the current population fraction-based payoff approximation)</li>
           <li>Payoff noise or perception bias</li>
           <li>Cultural sway decay or heterogeneity</li>
           <li>Time-varying \( \theta \) (dynamic environment)</li>
@@ -547,7 +549,7 @@
     </main>
 
     <footer>
-      <p><em>Document version 1.0 &ndash; Framework design for the Evolutionary Game with Cultural Sway.</em></p>
+      <p><em>Document version 1.1 &ndash; Updated payoff calculation to use population fractions for efficiency.</em></p>
     </footer>
 
     <script>
