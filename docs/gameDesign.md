@@ -62,8 +62,9 @@ At the beginning of the first game (initial θ):
 
 ### 4.1 Population Interaction
 - Population is **well-mixed** (no spatial structure).
-- Each agent interacts with **one random partner** per iteration (pairwise interaction).
-- Both agents receive payoffs from the payoff matrix according to their chosen strategies.
+- Payoffs are calculated as the **expected payoff** against a random opponent, based on the current population strategy fractions.
+- For each agent with strategy S, payoff = frac_T * payoff(S, 'T') + frac_I * payoff(S, 'I'), where frac_T and frac_I are the current proportions of Tradition and Innovation in the population.
+- This approximates the average payoff without explicit pairwise interactions for computational efficiency.
 
 ### 4.2 Evolutionary Update Rule
 After all agents collect payoffs:
@@ -139,7 +140,7 @@ When a new θₖ is introduced:
    - Assign cultural_sway attributes.
 
 2. **Run Evolution** under θ₁:
-   - Pairwise interactions and payoff accumulation.
+   - Payoff calculation based on population strategy fractions.
    - Strategy updates via Fermi rule.
    - Continue until equilibrium or `max_steps`.
 
@@ -159,6 +160,7 @@ When a new θₖ is introduced:
 
 - The model can later include:
   - Network structure (e.g., spatial lattice or graph-based interactions)
+  - Explicit pairwise interactions (replacing the current population fraction-based payoff approximation)
   - Payoff noise or perception bias
   - Cultural sway decay or heterogeneity
   - Time-varying θ (dynamic environment)
@@ -166,4 +168,4 @@ When a new θₖ is introduced:
 
 ---
 
-*Document version 1.0 – Framework design for the Evolutionary Game with Cultural Sway.*
+*Document version 1.1 – Updated payoff calculation to use population fractions for efficiency.*
