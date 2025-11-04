@@ -38,7 +38,7 @@ class Game:
         
         # Record payoff history
         for agent in self.population:
-            agent.payoff_history.append((agent.payoff, self.theta))
+            agent.payoff_history.append(agent.payoff)
 
     def update_strategies(self):
         new_strategies = []
@@ -57,7 +57,7 @@ class Game:
             self.update_strategies()
             # Record history after each evolution step
             for agent in self.population:
-                agent.history.append((agent.strategy, self.theta))
+                agent.history.append(agent.strategy)
         logging.info(f"Evolution completed for theta {self.theta}")
         # Return equilibrium: fractions T and I
         t_count = sum(1 for a in self.population if a.strategy == 'T')
