@@ -548,7 +548,96 @@
           <li>Time-varying \( \theta \) (dynamic environment)</li>
         </ul>
         <p class="subdued">Output analysis (mean strategy fractions, stability measures, entropy, etc.) will be added in later design stages.</p>
+      <section id="results">
+        <div class="numbered-title">
+          <span>9</span>
+          <h2>Simulation Results</h2>
+        </div>
+        <p>Below are the results from recent simulation runs, showing equilibria for different theta values.</p>
+        
+        <h3>Run 1</h3>
+        <p><strong>Parameters:</strong> N=1000, beta=0.01, f_cultural=0.75, max_steps=50, ensemble_size=100, theta_list=[0, 4, 8, 12, 16]</p>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Theta</th>
+                <th>Tradition (T) Fraction</th>
+                <th>Innovation (I) Fraction</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>0</td>
+                <td>0.9188</td>
+                <td>0.0812</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>0.9607</td>
+                <td>0.0393</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>0.9079</td>
+                <td>0.0921</td>
+              </tr>
+              <tr>
+                <td>12</td>
+                <td>0.7430</td>
+                <td>0.2570</td>
+              </tr>
+              <tr>
+                <td>16</td>
+                <td>0.2292</td>
+                <td>0.7708</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <h3>Run 2</h3>
+        <p><strong>Parameters:</strong> N=1000, beta=0.01, f_cultural=0.75, max_steps=50, ensemble_size=100, theta_list=[0, 4, 8, 2, 16]</p>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Theta</th>
+                <th>Tradition (T) Fraction</th>
+                <th>Innovation (I) Fraction</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>0</td>
+                <td>0.9261</td>
+                <td>0.0739</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>0.9575</td>
+                <td>0.0425</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>0.9020</td>
+                <td>0.0980</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>0.9771</td>
+                <td>0.0229</td>
+              </tr>
+              <tr>
+                <td>16</td>
+                <td>0.4058</td>
+                <td>0.5942</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
+
     </main>
 
     <footer>
