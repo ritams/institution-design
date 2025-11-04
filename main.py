@@ -7,7 +7,7 @@ def main():
     # Parameters
     N = 1000 # ensure this is even
     f_cultural = 3 / 4
-    theta_list = [0, 4, 8, 2, 16]
+    theta_list = [15, 1, 13]
     beta = 0.01
     max_steps = 50
     ensemble_size = 100
