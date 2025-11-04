@@ -71,9 +71,9 @@ After all agents collect payoffs:
 2. Let πᵢ and πⱼ be their payoffs.  
 3. The probability that *i* adopts *j*’s strategy follows the **Fermi update rule**:
 
-   \[
+   $$
    P(\text{i adopts j}) = \frac{1}{1 + \exp[-\beta (\pi_j - \pi_i)]}
-   \]
+   $$
 
    where β is the selection intensity parameter.
 
@@ -91,9 +91,9 @@ Each simulation runs for a fixed number of steps (`max_steps`), or until no stra
 ### 5.1 Multi-Game Simulation
 A simulation consists of multiple **game instances**, each parameterized by a distinct θ value:
 
-\[
+$$
 \Theta = [\theta_1, \theta_2, \ldots, \theta_M]
-\]
+$$
 
 θ values may:
 - increase gradually,
