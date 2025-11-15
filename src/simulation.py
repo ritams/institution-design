@@ -48,16 +48,16 @@ class Simulation:
 
     def run_simulation(self):
         os.makedirs('results', exist_ok=True)
-        run_dir = f'results/'
+        run_dir = f'results/data/'
         os.makedirs(run_dir, exist_ok=True)
         self.data = {}
         logging.info("Starting full simulation run")
-        for theta in self.theta_list:
+        for game_index, theta in enumerate(self.theta_list):
             logging.info(f"Processing theta {theta}")
             self.initialize_for_theta(theta)
             initial_strategies = [a.strategy for a in self.population]
             ensemble_fractions = []
-            self.data[theta] = {}
+            self.data[game_index] = {}
             for i in range(self.ensemble_size):
                 # Reset strategies to initial
                 for a, s in zip(self.population, initial_strategies):
@@ -68,8 +68,7 @@ class Simulation:
                 ensemble_fractions.append(fractions)
                 # Collect strategies and payoffs
                 strategies = [agent.history for agent in self.population]
-                payoffs = [agent.payoff_history for agent in self.population]
-                self.data[theta][i] = {'strategies': strategies, 'payoffs': payoffs}
+                self.data[game_index][i] = {'strategies': strategies, 'theta': theta}
             # Average fractions
             averaged_fractions = self.average_fractions(ensemble_fractions)
             self.equilibria[theta] = averaged_fractions

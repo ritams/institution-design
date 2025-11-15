@@ -4,10 +4,12 @@ This document describes the structure of the data saved by the simulation.
 
 ## Files
 
-Each simulation run creates a unique directory under `results/`, e.g., `results/run_20251104_155337/`, containing:
+Each simulation run creates a unique pickle file under `results/data` directory.
 
-- `simulation_data.pkl`: Binary file containing all simulation data.
-- `simulation_metadata.yaml`: Human-readable metadata in YAML format.
+- `<fname>.pkl`: Binary file containing all simulation data.
+- `<fname>.pkl` is generated using the `get_fname` function defined in `src/utils.py`.
+- `<fname>.pkl` follows the format: `data_N_{N}_f_cultural_{f_cultural}_theta_list_{theta_list}_beta_{beta:.3f}_max_steps_{max_steps}_ensemble_size_{ensemble_size}_update_fraction_{update_fraction:.3f}.pkl`
+
 
 ## Loading the Data
 
@@ -15,37 +17,30 @@ To load the data in Python:
 
 ```python
 import pickle
-import yaml
 
 # Load data
-with open('results/run_20251104_155337/simulation_data.pkl', 'rb') as f:
+with open('results/data/data_N_1000_f_cultural_0.75_theta_list_15_1_13_beta_0.100_max_steps_50_ensemble_size_100_update_fraction_0.100.pkl', 'rb') as f:
     data = pickle.load(f)
 
-# Load metadata
-with open('results/run_20251104_155337/simulation_metadata.yaml', 'r') as f:
-    metadata = yaml.safe_load(f)
 ```
+or use the `load_data` function defined in the `notebooks/analysis.ipynb`
 
 ## Data Structure
 
-### `simulation_data.pkl` (Pickle Dict)
+### `<fname>.pkl` (Pickle Dict)
 
 The pickle file contains a nested dictionary with the following structure:
 
 ```python
 {
-    theta: {
+    game_index: {
         ensemble_index: {
             'strategies': [
                 [agent0_history],  # List of strategies over time for agent 0
                 [agent1_history],  # List of strategies over time for agent 1
                 ...
             ],
-            'payoffs': [
-                [agent0_payoff_history],  # List of payoffs over time for agent 0
-                [agent1_payoff_history],  # List of payoffs over time for agent 1
-                ...
-            ]
+            'theta': theta_value,
         },
         ...
     },
@@ -53,28 +48,9 @@ The pickle file contains a nested dictionary with the following structure:
 }
 ```
 
-- **theta**: Key for each theta value in `theta_list` (e.g., 0, 4, 8, 12, 16).
+- **game_index**: Integer from 0 to `len(theta_list) - 1` for each theta value in `theta_list` (e.g., 0, 4, 8, 12, 16).
 - **ensemble_index**: Integer from 0 to `ensemble_size - 1` for each ensemble run.
 - **strategies**: List of lists, where each sublist is the strategy history (e.g., ['T', 'I', ...]) for one agent over the simulation steps.
-- **payoffs**: List of lists, where each sublist is the payoff history (floats) for one agent over the simulation steps.
+- **theta**: The theta value for the current game.
 
-### `simulation_metadata.yaml` (YAML Dict)
 
-The YAML file contains metadata:
-
-```yaml
-N: 1000  # Population size
-f_cultural: 0.5  # Fraction of cultural agents
-theta_list: [0, 4, 8, 12, 16]  # List of theta values
-beta: 0.01  # Learning rate or parameter
-max_steps: 50  # Maximum steps per game
-ensemble_size: 10  # Number of ensemble runs per theta
-equilibria:  # Averaged final fractions per theta
-  0: {T: 0.9154, I: 0.0846}
-  4: {T: 0.9076, I: 0.0924}
-  ...
-timestamp: '20251104_155337'  # Run timestamp
-run_dir: 'results/run_20251104_155337'  # Directory path
-```
-
-- Use this to understand simulation parameters and results summary.
