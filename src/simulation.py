@@ -7,15 +7,16 @@ from datetime import datetime
 import numpy as np
 from .agent import Agent
 from .game import Game
-
+from .utils import get_fname
 class Simulation:
-    def __init__(self, N, f_cultural, theta_list, beta, max_steps, ensemble_size):
+    def __init__(self, N, f_cultural, theta_list, beta, max_steps, ensemble_size, update_fraction):
         self.N = N
         self.f_cultural = f_cultural
         self.theta_list = theta_list
         self.beta = beta
         self.max_steps = max_steps
         self.ensemble_size = ensemble_size
+        self.update_fraction = update_fraction
         self.population = [Agent(random.random() < f_cultural) for _ in range(N)]
         self.equilibria = {}  # theta: averaged fractions
         logging.info(f"Initialized simulation with N={N}, f_cultural={f_cultural}, theta_list={theta_list}, beta={beta}, max_steps={max_steps}, ensemble_size={ensemble_size}")
@@ -47,8 +48,7 @@ class Simulation:
 
     def run_simulation(self):
         os.makedirs('results', exist_ok=True)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        run_dir = f'results/run_{timestamp}'
+        run_dir = f'results/'
         os.makedirs(run_dir, exist_ok=True)
         self.data = {}
         logging.info("Starting full simulation run")
@@ -62,7 +62,7 @@ class Simulation:
                 # Reset strategies to initial
                 for a, s in zip(self.population, initial_strategies):
                     a.strategy = s
-                game = Game(theta, self.beta, self.max_steps, self.population)
+                game = Game(theta, self.beta, self.max_steps, self.population, self.update_fraction)
                 game.strategies = np.array([0 if a.strategy == 'T' else 1 for a in self.population])
                 fractions = game.run()
                 ensemble_fractions.append(fractions)
@@ -76,20 +76,8 @@ class Simulation:
             logging.info(f"Completed theta {theta}, averaged final fractions: {averaged_fractions}")
         logging.info(f"Simulation completed. Equilibria: {self.equilibria}")
         # Save data to pickle
-        with open(f'{run_dir}/simulation_data.pkl', 'wb') as f:
+        fname = get_fname(N=self.N, f_cultural=self.f_cultural, theta_list=self.theta_list, beta=self.beta, max_steps=self.max_steps, ensemble_size=self.ensemble_size, update_fraction=self.update_fraction)
+        with open(f'{run_dir}/{fname}', 'wb') as f:
             pickle.dump(self.data, f)
-        # Save metadata to YAML
-        metadata = {
-            'N': self.N,
-            'f_cultural': self.f_cultural,
-            'theta_list': self.theta_list,
-            'beta': self.beta,
-            'max_steps': self.max_steps,
-            'ensemble_size': self.ensemble_size,
-            'equilibria': [{'theta': theta, **self.equilibria[theta]} for theta in self.theta_list],
-            'timestamp': timestamp,
-            'run_dir': run_dir
-        }
-        with open(f'{run_dir}/simulation_metadata.yaml', 'w') as f:
-            yaml.dump(metadata, f)
+        logging.info(f"Saved data to {run_dir}/{fname}")            
         return self.equilibria

@@ -14,10 +14,11 @@ def payoff_matrix(theta, strat1, strat2):
     return p, p  # symmetric
 
 @jit(nopython=True)
-def update_strategies_jit(strategies, payoffs, beta):
+def update_strategies_jit(strategies, payoffs, beta, update_fraction):
     new_strategies = strategies.copy()
     n = len(strategies)
-    for i in range(n):
+    random_indices = np.random.randint(0, n, int(n * update_fraction))
+    for i in random_indices:
         j = np.random.randint(0, n)
         while j == i:
             j = np.random.randint(0, n)
@@ -36,11 +37,12 @@ def payoff_matrix_jit(theta, strat1, strat2):
     return p, p
 
 class Game:
-    def __init__(self, theta, beta, max_steps, population):
+    def __init__(self, theta, beta, max_steps, population, update_fraction):
         self.theta = theta
         self.beta = beta
         self.max_steps = max_steps
         self.population = population
+        self.update_fraction = update_fraction
         for agent in population:
             agent.payoff = 0.0
             agent.history = []
@@ -70,7 +72,7 @@ class Game:
             agent.payoff_history.append(agent.payoff)
 
     def update_strategies(self):
-        self.strategies = update_strategies_jit(self.strategies, self.payoffs, self.beta)
+        self.strategies = update_strategies_jit(self.strategies, self.payoffs, self.beta, self.update_fraction)
         
         # Update agent objects
         for i, agent in enumerate(self.population):
