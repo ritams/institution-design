@@ -12,8 +12,9 @@ def main():
     max_steps = 50
     ensemble_size = 100
     update_fraction = 0.1
+    seed = 42
     
-    sim = Simulation(N, f_cultural, theta_list, beta, max_steps, ensemble_size, update_fraction)
+    sim = Simulation(N, f_cultural, theta_list, beta, max_steps, ensemble_size, update_fraction, seed=seed)
     equilibria = sim.run_simulation()
     logging.info("Main simulation completed")
 
