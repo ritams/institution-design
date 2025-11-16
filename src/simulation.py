@@ -1,4 +1,3 @@
-import random
 import os
 import logging
 import pickle
@@ -8,8 +7,10 @@ import numpy as np
 from .agent import Agent
 from .game import Game
 from .utils import get_fname
+
+
 class Simulation:
-    def __init__(self, N, f_cultural, theta_list, beta, max_steps, ensemble_size, update_fraction):
+    def __init__(self, N, f_cultural, theta_list, beta, max_steps, ensemble_size, update_fraction, seed=None):
         self.N = N
         self.f_cultural = f_cultural
         self.theta_list = theta_list
@@ -17,14 +18,16 @@ class Simulation:
         self.max_steps = max_steps
         self.ensemble_size = ensemble_size
         self.update_fraction = update_fraction
-        self.population = [Agent(random.random() < f_cultural) for _ in range(N)]
+        self.seed = seed
+        self.rng = np.random.default_rng(seed)
+        self.population = [Agent(self.rng.random() < f_cultural) for _ in range(N)]
         self.equilibria = {}  # theta: averaged fractions
         logging.info(f"Initialized simulation with N={N}, f_cultural={f_cultural}, theta_list={theta_list}, beta={beta}, max_steps={max_steps}, ensemble_size={ensemble_size}")
 
     def initialize_for_theta(self, theta):
         if not self.equilibria:
             for agent in self.population:
-                agent.strategy = random.choice(['T', 'I'])
+                agent.strategy = self.rng.choice(['T', 'I'])
             logging.info(f"Initialized strategies randomly for first theta {theta}")
         else:
             prev_thetas = list(self.equilibria.keys())
@@ -32,9 +35,9 @@ class Simulation:
             frac_dict = self.equilibria[closest_theta]
             for agent in self.population:
                 if agent.cultural_sway:
-                    agent.strategy = 'T' if random.random() < frac_dict['T'] else 'I'
+                    agent.strategy = 'T' if self.rng.random() < frac_dict['T'] else 'I'
                 else:
-                    agent.strategy = random.choice(['T', 'I'])
+                    agent.strategy = self.rng.choice(['T', 'I'])
             logging.info(f"Initialized strategies for theta {theta} based on closest previous theta {closest_theta} with T fraction {frac_dict['T']}")
 
     def average_fractions(self, frac_list):
@@ -62,7 +65,7 @@ class Simulation:
                 # Reset strategies to initial
                 for a, s in zip(self.population, initial_strategies):
                     a.strategy = s
-                game = Game(theta, self.beta, self.max_steps, self.population, self.update_fraction)
+                game = Game(theta, self.beta, self.max_steps, self.population, self.update_fraction, self.rng)
                 game.strategies = np.array([0 if a.strategy == 'T' else 1 for a in self.population])
                 fractions = game.run()
                 ensemble_fractions.append(fractions)
@@ -75,7 +78,7 @@ class Simulation:
             logging.info(f"Completed theta {theta}, averaged final fractions: {averaged_fractions}")
         logging.info(f"Simulation completed. Equilibria: {self.equilibria}")
         # Save data to pickle
-        fname = get_fname(N=self.N, f_cultural=self.f_cultural, theta_list=self.theta_list, beta=self.beta, max_steps=self.max_steps, ensemble_size=self.ensemble_size, update_fraction=self.update_fraction)
+        fname = get_fname(N=self.N, f_cultural=self.f_cultural, theta_list=self.theta_list, beta=self.beta, max_steps=self.max_steps, ensemble_size=self.ensemble_size, update_fraction=self.update_fraction, seed=self.seed)
         with open(f'{run_dir}/{fname}', 'wb') as f:
             pickle.dump(self.data, f)
         logging.info(f"Saved data to {run_dir}/{fname}")            

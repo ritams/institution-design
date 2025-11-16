@@ -1,4 +1,3 @@
-import random
 import math
 import logging
 import numpy as np
@@ -14,16 +13,17 @@ def payoff_matrix(theta, strat1, strat2):
     return p, p  # symmetric
 
 @jit(nopython=True)
-def update_strategies_jit(strategies, payoffs, beta, update_fraction):
+def update_strategies_jit(strategies, payoffs, beta, random_indices, partner_indices, thresholds):
     new_strategies = strategies.copy()
     n = len(strategies)
-    random_indices = np.random.randint(0, n, int(n * update_fraction))
-    for i in random_indices:
-        j = np.random.randint(0, n)
-        while j == i:
-            j = np.random.randint(0, n)
+    updates = len(random_indices)
+    for idx in range(updates):
+        i = random_indices[idx]
+        j = partner_indices[idx]
+        if j == i:
+            j = (j + 1) % n
         prob = 1 / (1 + np.exp(-beta * (payoffs[j] - payoffs[i])))
-        if np.random.random() < prob:
+        if thresholds[idx] < prob:
             new_strategies[i] = strategies[j]
     return new_strategies
 
@@ -37,12 +37,13 @@ def payoff_matrix_jit(theta, strat1, strat2):
     return p, p
 
 class Game:
-    def __init__(self, theta, beta, max_steps, population, update_fraction):
+    def __init__(self, theta, beta, max_steps, population, update_fraction, rng):
         self.theta = theta
         self.beta = beta
         self.max_steps = max_steps
         self.population = population
         self.update_fraction = update_fraction
+        self.rng = rng
         for agent in population:
             agent.payoff = 0.0
             agent.history = []
@@ -72,7 +73,21 @@ class Game:
             agent.payoff_history.append(agent.payoff)
 
     def update_strategies(self):
-        self.strategies = update_strategies_jit(self.strategies, self.payoffs, self.beta, self.update_fraction)
+        n = len(self.population)
+        updates = int(n * self.update_fraction)
+        if updates == 0:
+            return
+        random_indices = self.rng.integers(0, n, size=updates, dtype=np.int64)
+        partner_indices = self.rng.integers(0, n, size=updates, dtype=np.int64)
+        thresholds = self.rng.random(updates)
+        self.strategies = update_strategies_jit(
+            self.strategies,
+            self.payoffs,
+            self.beta,
+            random_indices,
+            partner_indices,
+            thresholds,
+        )
         
         # Update agent objects
         for i, agent in enumerate(self.population):
